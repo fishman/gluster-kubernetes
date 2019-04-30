@@ -49,6 +49,9 @@ OBJ_USER=""
 OBJ_PASSWORD=""
 OBJ_STORAGE_CLASS="glusterfs-for-s3"
 OBJ_CAPACITY="2Gi"
+PV_DATA_ALIGNMENT="256K"
+VG_PHYSICALEXTENTSIZE="4MB"
+LV_CHUNKSIZE="256K"
 
 usage() {
   echo -e "USAGE: ${PROG} [-ghvy] [-c CLI] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>]
@@ -57,7 +60,9 @@ usage() {
        [--daemonset-label <DAEMONSET_LABEL> ] [--single-node] [--no-object]
        [--object-account <ACCOUNT>] [--object-user <USER>]
        [--object-password <PASSWORD>] [--object-sc <STORAGE_CLASS>]
-       [--object-capacity <CAPACITY>] [-l <LOG_FILE>] [--abort] [<TOPOLOGY>]\n"
+       [--object-capacity <CAPACITY>] [-l <LOG_FILE>] [--abort] [<TOPOLOGY>]
+       [--pv-data-alignment <PV_DATA_ALIGNMENT>] [--vg-physicalextentsize <VG_PHYSICALEXTENTSIZE>]
+       [--lv-chunksize] [<LV_CHUNKSIZE>]\n"
 }
 
 help_exit() {
@@ -143,6 +148,15 @@ Options:
   --object-capacity CAPACITY
               The total capacity of the GlusterFS volume which will store the
               object data. Default is '${OBJ_CAPACITY}'.
+
+  --pv-data-alignment PV_DATA_ALIGNMENT
+              TODO
+
+  --vg-physicalextentsize VG_PHYSICALEXTENTSIZE
+              TODO
+
+  --lv-chunksize LV_CHUNKSIZE
+              TODO
 
   -y, --yes
               Skip the pre-requisites prompt.
@@ -497,6 +511,26 @@ while [[ $# -ge 1 ]]; do
         if [[ $? -eq 2 ]]; then shift; fi
         keypos=$keylen
         ;;
+        -pv-data-alignment*)
+        PV_DATA_ALIGNMENT=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
+        -vg-physicalextentsize*)
+        VG_PHYSICALEXTENTSIZE=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
+        -pv-data-alignment*)
+        PV_DATA_ALIGNMENT=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
+        -lv-chunksize*)
+        LV_CHUNKSIZE=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
         -abort)
         ABORT=1
         keypos=$keylen
@@ -774,7 +808,7 @@ fi
 
 if [[ ${EXISTS_DEPLOY_HEKETI} -eq 0 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
   #The FSTAB variable may contain slashes as path separators, so use '#' as the expression delimiter instead
-  sed -e "s/\${HEKETI_EXECUTOR}/${EXECUTOR}/" -e "s#\${HEKETI_FSTAB}#${FSTAB}#" -e "s/\${SSH_PORT}/${SSH_PORT}/" -e "s/\${SSH_USER}/${SSH_USER}/" -e "s/\${SSH_SUDO}/${SSH_SUDO}/" "${SCRIPT_DIR}/heketi.json.template" > heketi.json
+  sed -e "s/\${HEKETI_EXECUTOR}/${EXECUTOR}/" -e "s#\${HEKETI_FSTAB}#${FSTAB}#" -e "s/\${SSH_PORT}/${SSH_PORT}/" -e "s/\${SSH_USER}/${SSH_USER}/" -e "s/\${SSH_SUDO}/${SSH_SUDO}/" -e "s/\${PV_DATA_ALIGNMENT}/${PV_DATA_ALIGNMENT}/" -e "s/\${VG_PHYSICALEXTENTSIZE}/${VG_PHYSICALEXTENTSIZE}/" -e "s/\${LV_CHUNKSIZE}/${LV_CHUNKSIZE}/" "${SCRIPT_DIR}/heketi.json.template" > heketi.json
   eval_output "${CLI} create secret generic heketi-config-secret --from-file=private_key=${SSH_KEYFILE} --from-file=./heketi.json --from-file=topology.json=${TOPOLOGY}"
   eval_output "${CLI} label --overwrite secret heketi-config-secret glusterfs=heketi-config-secret heketi=config-secret"
   rm -f heketi.json

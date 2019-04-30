@@ -27,11 +27,17 @@
 		"db" : "/var/lib/heketi/heketi.db",
 
 		"kubeexec" : {
-			"rebalance_on_expansion": true
+			"rebalance_on_expansion": true,
+			"pv_data_alignment": "${PV_DATA_ALIGNMENT}",
+			"vg_physicalextentsize": "${VG_PHYSICALEXTENTSIZE}",
+			"lv_chunksize": "${LV_CHUNKSIZE}"
 		},
 
 		"sshexec" : {
 			"rebalance_on_expansion": true,
+			"pv_data_alignment": "${PV_DATA_ALIGNMENT}",
+			"vg_physicalextentsize": "${VG_PHYSICALEXTENTSIZE}",
+			"lv_chunksize": "${LV_CHUNKSIZE}",
 			"keyfile" : "/etc/heketi/private_key",
 			"port" : "${SSH_PORT}",
 			"user" : "${SSH_USER}",
